@@ -1,52 +1,38 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
-SITE_NAME="${1:-}"
-SITE_REPO="${2:-}"
-
-if [ -z "$SITE_NAME" ] || [ -z "$SITE_REPO" ]; then
-  echo "Usage: ./scripts/bootstrap-new-site.sh \"Site Name\" site-repo-name"
-  exit 1
-fi
-
-TARGET_ROOT="${WEBSITE_FORGE_OUTPUT_ROOT:-$HOME/Documents/Projects}"
-TARGET="$TARGET_ROOT/$SITE_REPO"
-
-if [ -e "$TARGET" ]; then
-  echo "🔴 target already exists: $TARGET"
-  exit 1
-fi
-
-mkdir -p "$TARGET/docs" "$TARGET/specs" "$TARGET/evidence"
-cat > "$TARGET/README.md" <<SITE
-# $SITE_NAME
-
-Generated from AndyAI Website Forge foundation placeholder.
-
-## Status
-
-Draft scaffold only.
-
-## Boundary
-
-No secrets. No client data. No database. No auth.
-SITE
-
-cat > "$TARGET/specs/site-blueprint.json" <<SITE
-{
-  "site_name": "$SITE_NAME",
-  "repo_name": "$SITE_REPO",
-  "domain": "",
-  "purpose": "Draft purpose",
-  "audience": [],
-  "site_type": "landing",
-  "core_message": "Draft core message",
-  "routes": ["/", "/about", "/contact"],
-  "visual_direction": "AndyAI visual canon",
-  "qa_level": "foundation",
-  "owner": "Andrija Kolundzic / Japan IT Business",
-  "status": "draft"
-}
-SITE
-
-echo "🟢 draft site scaffold created: $TARGET"
+BLUEPRINT="${1:-specs/generated-site-blueprint.example.json}"
+OUT_ROOT="${2:-generated-sites}"
+[ -f "$BLUEPRINT" ] || { echo "🔴 blueprint not found: $BLUEPRINT"; exit 1; }
+python3 - "$BLUEPRINT" "$OUT_ROOT" <<'PYSITEGEN'
+import json, re, sys
+from pathlib import Path
+bp=Path(sys.argv[1]); out=Path(sys.argv[2]); data=json.loads(bp.read_text(encoding='utf-8'))
+required=["site_slug","site_title","site_subtitle","domain_direction","owner","routes","keywords"]
+missing=[k for k in required if k not in data]
+if missing: raise SystemExit('🔴 missing blueprint keys: '+', '.join(missing))
+slug=data['site_slug']
+if not re.match(r'^[a-z0-9][a-z0-9-]*[a-z0-9]$', slug): raise SystemExit('🔴 site_slug must be lowercase kebab-case')
+routes=data['routes']; paths=[r['path'] for r in routes]; req=['/','/about','/contact','/presentation','/projects','/signals']
+miss=[r for r in req if r not in paths]
+if miss: raise SystemExit('🔴 missing required routes: '+', '.join(miss))
+for key in ['supabase','auth','database','monetization','client_data','runtime_ai_calls']:
+    if data.get('safety',{}).get(key) is not False: raise SystemExit('🔴 safety key must be false: '+key)
+site=out/slug
+(site/'app').mkdir(parents=True,exist_ok=True); (site/'public'/'visuals').mkdir(parents=True,exist_ok=True); (site/'docs').mkdir(parents=True,exist_ok=True)
+def clean(s): return str(s).replace('"', "'").replace('`', "'")
+def page(title, summary):
+    return """export default function Page() {\n  return (\n    <main className=\"min-h-screen px-6 py-12 md:px-12\">\n      <section className=\"mx-auto max-w-5xl rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm\">\n        <p className=\"text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500\">AndyAI Website Forge</p>\n        <h1 className=\"mt-4 text-4xl font-bold tracking-tight text-zinc-950\">TITLE</h1>\n        <p className=\"mt-4 text-lg leading-8 text-zinc-700\">SUMMARY</p>\n        <div className=\"mt-8 rounded-2xl bg-zinc-950 p-6 text-white\">\n          <p className=\"text-sm uppercase tracking-[0.25em] text-zinc-400\">Generated artifact formula</p>\n          <p className=\"mt-3 text-xl font-semibold\">Story → Structure → Visuals → Proof → Deployment → Trust</p>\n        </div>\n      </section>\n    </main>\n  );\n}\n""".replace('TITLE', clean(title)).replace('SUMMARY', clean(summary))
+(site/'package.json').write_text(json.dumps({"name":slug,"version":"0.1.0","private":True,"scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"next":"latest","react":"latest","react-dom":"latest","typescript":"latest","@types/node":"latest","@types/react":"latest","@types/react-dom":"latest"},"devDependencies":{}}, indent=2)+'\n', encoding='utf-8')
+(site/'next.config.js').write_text("/** @type {import('next').NextConfig} */\nconst nextConfig = {};\nmodule.exports = nextConfig;\n", encoding='utf-8')
+(site/'tsconfig.json').write_text(json.dumps({"compilerOptions":{"target":"ES2017","lib":["dom","dom.iterable","esnext"],"allowJs":True,"skipLibCheck":True,"strict":True,"noEmit":True,"esModuleInterop":True,"module":"esnext","moduleResolution":"bundler","resolveJsonModule":True,"isolatedModules":True,"jsx":"preserve","incremental":True,"plugins":[{"name":"next"}]},"include":["next-env.d.ts","**/*.ts","**/*.tsx",".next/types/**/*.ts"],"exclude":["node_modules"]}, indent=2)+'\n', encoding='utf-8')
+(site/'next-env.d.ts').write_text('/// <reference types="next" />\n/// <reference types="next/image-types/global" />\n', encoding='utf-8')
+(site/'app'/'globals.css').write_text('body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #f4f4f5; color: #09090b; }\n', encoding='utf-8')
+(site/'app'/'layout.tsx').write_text('import "./globals.css";\n\nexport const metadata = {\n  title: "'+clean(data['site_title'])+'",\n  description: "'+clean(data['site_subtitle'])+'",\n};\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang="en">\n      <body>{children}</body>\n    </html>\n  );\n}\n', encoding='utf-8')
+for r in routes:
+    target=site/'app'/'page.tsx' if r['path']=='/' else site/'app'/r['path'].strip('/')/'page.tsx'
+    target.parent.mkdir(parents=True,exist_ok=True); target.write_text(page(r.get('title',r['path']), r.get('summary',data['site_subtitle'])), encoding='utf-8')
+(site/'public'/'visuals'/'.gitkeep').write_text('', encoding='utf-8')
+(site/'README.md').write_text('# '+data['site_title']+'\n\n'+data['site_subtitle']+'\n\nGenerated by AndyAI Website Forge — PACK2 Site Template Generator Foundation.\n\nDomain direction: `'+data['domain_direction']+'`\n', encoding='utf-8')
+(site/'docs'/'SITE_GENERATION_EVIDENCE.md').write_text('# Site Generation Evidence\n\nGenerated site: `'+slug+'`  \nSource blueprint: `'+str(bp)+'`  \nGenerator: AndyAI Website Forge PACK2\n\nSafety: No Supabase. No auth. No database. No monetization. No client data. No runtime AI calls.\n', encoding='utf-8')
+print('🟢 generated site scaffold: '+str(site))
+PYSITEGEN

@@ -1,0 +1,56 @@
+{
+  "site_slug": "example-forge-site",
+  "site_title": "Example Forge Site",
+  "site_subtitle": "A generated public website scaffold produced by AndyAI Website Forge.",
+  "domain_direction": "example.forge.andyai.ai",
+  "owner": "Andrija Kolundzic / Japan IT Business",
+  "system": "AndyAI Website Forge",
+  "description": "First controlled local generated-site flow for PACK2.",
+  "keywords": [
+    "AndyAI",
+    "Website Forge",
+    "generated site",
+    "public artifact",
+    "trust"
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "title": "Home",
+      "summary": "Generated homepage with site identity and trust formula."
+    },
+    {
+      "path": "/about",
+      "title": "About",
+      "summary": "Project explanation and human-guided production method."
+    },
+    {
+      "path": "/contact",
+      "title": "Contact",
+      "summary": "Simple contact route placeholder."
+    },
+    {
+      "path": "/presentation",
+      "title": "Presentation",
+      "summary": "Public presentation flow placeholder."
+    },
+    {
+      "path": "/projects",
+      "title": "Projects",
+      "summary": "Project cards placeholder."
+    },
+    {
+      "path": "/signals",
+      "title": "Signals",
+      "summary": "Signal/report route placeholder."
+    }
+  ],
+  "safety": {
+    "supabase": false,
+    "auth": false,
+    "database": false,
+    "monetization": false,
+    "client_data": false,
+    "runtime_ai_calls": false
+  }
+}
