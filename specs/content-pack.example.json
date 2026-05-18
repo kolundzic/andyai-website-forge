@@ -1,0 +1,31 @@
+{
+  "homepage": {
+    "hero_title": "AndyAI Website Forge",
+    "hero_subtitle": "A controlled production system for creating new public websites from verified content, visual, routing, deployment and QA patterns.",
+    "primary_cta": "Study the Forge Canon",
+    "secondary_cta": "Review the Site Blueprint"
+  },
+  "navigation": [
+    { "label": "Home", "href": "/" },
+    { "label": "About", "href": "/about" },
+    { "label": "Projects", "href": "/projects" },
+    { "label": "Contact", "href": "/contact" }
+  ],
+  "sections": [
+    {
+      "id": "core-formula",
+      "title": "Core Formula",
+      "body": "One verified website pattern plus one content pack plus one image pack plus one domain plus one TAP-TAP strike equals a new public website.",
+      "proof": "Proven through the andyai-main-site production pattern."
+    }
+  ],
+  "about": {
+    "title": "About Website Forge",
+    "body": "Website Forge packages AndyAI website production knowledge into a reusable factory system."
+  },
+  "contact": {
+    "title": "Contact",
+    "email": "kolundzic@gmail.com"
+  },
+  "readme_manifest": "Website Forge is the AndyAI method for repeatable public website production."
+}

@@ -1,0 +1,14 @@
+{
+  "site_name": "AndyAI Website Forge",
+  "repo_name": "andyai-website-forge",
+  "domain": "forge.andyai.ai",
+  "purpose": "Controlled production system for creating new public websites through AndyAI methodology.",
+  "audience": ["AndyAI team", "partners", "clients", "technical collaborators"],
+  "site_type": "product",
+  "core_message": "Website Forge turns proven website patterns into repeatable public artifact production.",
+  "routes": ["/", "/about", "/contact", "/presentation", "/projects", "/signals", "/visual-canon"],
+  "visual_direction": "clean professional AndyAI visual canon with warm cards, diagrams, icons, proof blocks, and generous whitespace",
+  "qa_level": "foundation",
+  "owner": "Andrija Kolundzic / Japan IT Business",
+  "status": "draft"
+}

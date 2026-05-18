@@ -1,0 +1,22 @@
+{
+  "images": [
+    {
+      "id": "hero-visual",
+      "filename": "hero-visual.png",
+      "purpose": "Homepage hero visual showing the website production forge pipeline.",
+      "route": "/",
+      "aspect_ratio": "16:9",
+      "alt_text": "AndyAI Website Forge pipeline from idea to public website.",
+      "status": "needed"
+    },
+    {
+      "id": "workflow-diagram",
+      "filename": "workflow-diagram.png",
+      "purpose": "Visual diagram explaining Blueprint, Content Pack, Image Pack, Route Pack, QA, and deployment.",
+      "route": "/presentation",
+      "aspect_ratio": "16:9",
+      "alt_text": "Website Forge workflow diagram.",
+      "status": "needed"
+    }
+  ]
+}

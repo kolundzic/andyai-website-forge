@@ -1,0 +1,5 @@
+{
+  "required_routes": ["/", "/about", "/contact"],
+  "recommended_routes": ["/presentation", "/projects", "/signals", "/visual-canon", "/visual-identity"],
+  "optional_routes": ["/services", "/use-cases", "/pilot", "/resources"]
+}
