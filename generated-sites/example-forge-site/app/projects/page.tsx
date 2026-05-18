@@ -1,15 +1,18 @@
 export default function Page() {
   return (
-    <main className="min-h-screen px-6 py-12 md:px-12">
-      <section className="mx-auto max-w-5xl rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500">AndyAI Website Forge</p>
-        <h1 className="mt-4 text-4xl font-bold tracking-tight text-zinc-950">Projects</h1>
-        <p className="mt-4 text-lg leading-8 text-zinc-700">Project cards placeholder.</p>
-        <div className="mt-8 rounded-2xl bg-zinc-950 p-6 text-white">
-          <p className="text-sm uppercase tracking-[0.25em] text-zinc-400">Generated artifact formula</p>
-          <p className="mt-3 text-xl font-semibold">Story → Structure → Visuals → Proof → Deployment → Trust</p>
-        </div>
-      </section>
+    <main>
+      <nav className="nav">
+        <strong>Example Forge Site</strong>
+        <div><a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/projects">Projects</a>
+        <a href="/signals">Signals</a>
+        <a href="/presentation">Presentation</a>
+        <a href="/proof">Proof</a>
+        <a href="/contact">Contact</a></div>
+      </nav>
+      <section className="hero small"><h1>Projects</h1><p>Generated project cards from content pack</p></section><section className="grid"><article className="card"><p className="eyebrow">project</p><h3>Website Forge Generator</h3><p>A controlled generator for creating public website scaffolds from verified packs.</p><span>PACK3 expansion</span></article>
+          <article className="card"><p className="eyebrow">project</p><h3>AndyAI Main Site Pattern</h3><p>The proven public website pattern that inspired the forge methodology.</p><span>reference pattern</span></article></section>
     </main>
   );
 }

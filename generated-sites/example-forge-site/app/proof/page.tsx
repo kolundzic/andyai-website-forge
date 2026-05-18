@@ -11,7 +11,7 @@ export default function Page() {
         <a href="/proof">Proof</a>
         <a href="/contact">Contact</a></div>
       </nav>
-      <section className="hero small"><h1>Contact</h1><p>Generated contact and next-step page</p></section><section className="panel"><h2>Next step</h2><p>Review the generated evidence, confirm the content pack, then prepare deployment when the human operator approves.</p></section>
+      <section className="hero small"><h1>Proof</h1><p>Generated proof and evidence overview</p></section><section className="panel"><h2>Generation Proof</h2><p>This site was generated from blueprint, content pack and route pack inputs, then verified through Website Forge scripts.</p><p>Formula: Blueprint + Content Pack + Route Pack → Website Artifact → Verification → Evidence.</p></section>
     </main>
   );
 }

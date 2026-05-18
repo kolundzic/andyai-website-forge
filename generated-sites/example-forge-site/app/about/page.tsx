@@ -1,15 +1,19 @@
 export default function Page() {
   return (
-    <main className="min-h-screen px-6 py-12 md:px-12">
-      <section className="mx-auto max-w-5xl rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500">AndyAI Website Forge</p>
-        <h1 className="mt-4 text-4xl font-bold tracking-tight text-zinc-950">About</h1>
-        <p className="mt-4 text-lg leading-8 text-zinc-700">Project explanation and human-guided production method.</p>
-        <div className="mt-8 rounded-2xl bg-zinc-950 p-6 text-white">
-          <p className="text-sm uppercase tracking-[0.25em] text-zinc-400">Generated artifact formula</p>
-          <p className="mt-3 text-xl font-semibold">Story → Structure → Visuals → Proof → Deployment → Trust</p>
-        </div>
-      </section>
+    <main>
+      <nav className="nav">
+        <strong>Example Forge Site</strong>
+        <div><a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/projects">Projects</a>
+        <a href="/signals">Signals</a>
+        <a href="/presentation">Presentation</a>
+        <a href="/proof">Proof</a>
+        <a href="/contact">Contact</a></div>
+      </nav>
+      <section className="hero small"><h1>About</h1><p>Generated explanation of the site identity and method</p></section><section className="grid"><section className="panel"><h2>Story → Structure → Visuals → Proof</h2><p>Website Forge turns raw project intent into a structured public artifact with clear sections, route logic, visual slots and verification evidence.</p></section>
+        <section className="panel"><h2>Controlled production, not random page making</h2><p>Every generated page should come from declared input packs, not from accidental copy-paste or invisible decisions.</p></section>
+        <section className="panel"><h2>Human-approved website factory</h2><p>The system supports human judgment by packaging structure, consistency and QA into a repeatable flow.</p></section></section>
     </main>
   );
 }

@@ -1,0 +1,74 @@
+{
+  "contentPackVersion": "0.3",
+  "siteName": "Example Forge Site",
+  "tagline": "A public website generated through AndyAI Website Forge.",
+  "hero": {
+    "headline": "A website that knows its story before it becomes pages.",
+    "subheadline": "Generated from a controlled blueprint, content pack and route pack through AndyAI Website Forge.",
+    "primaryCta": "Explore the system",
+    "secondaryCta": "View generated proof"
+  },
+  "sections": [
+    {
+      "id": "story-structure-proof",
+      "title": "Story → Structure → Visuals → Proof",
+      "body": "Website Forge turns raw project intent into a structured public artifact with clear sections, route logic, visual slots and verification evidence."
+    },
+    {
+      "id": "controlled-production",
+      "title": "Controlled production, not random page making",
+      "body": "Every generated page should come from declared input packs, not from accidental copy-paste or invisible decisions."
+    },
+    {
+      "id": "human-approved-factory",
+      "title": "Human-approved website factory",
+      "body": "The system supports human judgment by packaging structure, consistency and QA into a repeatable flow."
+    }
+  ],
+  "projects": [
+    {
+      "title": "Website Forge Generator",
+      "summary": "A controlled generator for creating public website scaffolds from verified packs.",
+      "status": "PACK3 expansion"
+    },
+    {
+      "title": "AndyAI Main Site Pattern",
+      "summary": "The proven public website pattern that inspired the forge methodology.",
+      "status": "reference pattern"
+    }
+  ],
+  "signals": [
+    {
+      "title": "Blueprint before pages",
+      "summary": "A serious website should start from declared identity, story, route structure and proof requirements."
+    },
+    {
+      "title": "Verifier before deployment",
+      "summary": "A generated website is not ready until it passes local and artifact-level checks."
+    }
+  ],
+  "ctas": [
+    {
+      "label": "Generate next site",
+      "text": "Use the forge to turn a controlled content pack into a public artifact."
+    },
+    {
+      "label": "Review evidence",
+      "text": "Open the generated evidence file before committing or deploying."
+    }
+  ],
+  "visualSlots": [
+    {
+      "id": "hero-visual",
+      "label": "Hero visual",
+      "purpose": "Explain the core site story",
+      "suggestedAspectRatio": "16:9"
+    },
+    {
+      "id": "system-flow-visual",
+      "label": "System flow visual",
+      "purpose": "Show blueprint to site generation flow",
+      "suggestedAspectRatio": "4:3"
+    }
+  ]
+}

@@ -1,8 +1,8 @@
-import "./globals.css";
+import './globals.css';
 
 export const metadata = {
-  title: "Example Forge Site",
-  description: "A generated public website scaffold produced by AndyAI Website Forge.",
+  title: `Example Forge Site`,
+  description: `A public website generated through AndyAI Website Forge.`
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

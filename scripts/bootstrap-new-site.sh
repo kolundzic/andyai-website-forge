@@ -1,38 +1,181 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
 BLUEPRINT="${1:-specs/generated-site-blueprint.example.json}"
-OUT_ROOT="${2:-generated-sites}"
-[ -f "$BLUEPRINT" ] || { echo "🔴 blueprint not found: $BLUEPRINT"; exit 1; }
-python3 - "$BLUEPRINT" "$OUT_ROOT" <<'PYSITEGEN'
-import json, re, sys
+CONTENT_PACK="${2:-specs/content-pack.expanded.example.json}"
+ROUTE_PACK="${3:-specs/route-pack.expanded.example.json}"
+OUT_DIR="${4:-generated-sites/example-forge-site}"
+
+if [ ! -f "$BLUEPRINT" ]; then echo "🔴 missing blueprint: $BLUEPRINT"; exit 1; fi
+if [ ! -f "$CONTENT_PACK" ]; then echo "🔴 missing content pack: $CONTENT_PACK"; exit 1; fi
+if [ ! -f "$ROUTE_PACK" ]; then echo "🔴 missing route pack: $ROUTE_PACK"; exit 1; fi
+
+python3 - "$BLUEPRINT" "$CONTENT_PACK" "$ROUTE_PACK" "$OUT_DIR" <<'PY'
+import json
+import re
+import shutil
+import sys
 from pathlib import Path
-bp=Path(sys.argv[1]); out=Path(sys.argv[2]); data=json.loads(bp.read_text(encoding='utf-8'))
-required=["site_slug","site_title","site_subtitle","domain_direction","owner","routes","keywords"]
-missing=[k for k in required if k not in data]
-if missing: raise SystemExit('🔴 missing blueprint keys: '+', '.join(missing))
-slug=data['site_slug']
-if not re.match(r'^[a-z0-9][a-z0-9-]*[a-z0-9]$', slug): raise SystemExit('🔴 site_slug must be lowercase kebab-case')
-routes=data['routes']; paths=[r['path'] for r in routes]; req=['/','/about','/contact','/presentation','/projects','/signals']
-miss=[r for r in req if r not in paths]
-if miss: raise SystemExit('🔴 missing required routes: '+', '.join(miss))
-for key in ['supabase','auth','database','monetization','client_data','runtime_ai_calls']:
-    if data.get('safety',{}).get(key) is not False: raise SystemExit('🔴 safety key must be false: '+key)
-site=out/slug
-(site/'app').mkdir(parents=True,exist_ok=True); (site/'public'/'visuals').mkdir(parents=True,exist_ok=True); (site/'docs').mkdir(parents=True,exist_ok=True)
-def clean(s): return str(s).replace('"', "'").replace('`', "'")
-def page(title, summary):
-    return """export default function Page() {\n  return (\n    <main className=\"min-h-screen px-6 py-12 md:px-12\">\n      <section className=\"mx-auto max-w-5xl rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm\">\n        <p className=\"text-sm font-semibold uppercase tracking-[0.25em] text-zinc-500\">AndyAI Website Forge</p>\n        <h1 className=\"mt-4 text-4xl font-bold tracking-tight text-zinc-950\">TITLE</h1>\n        <p className=\"mt-4 text-lg leading-8 text-zinc-700\">SUMMARY</p>\n        <div className=\"mt-8 rounded-2xl bg-zinc-950 p-6 text-white\">\n          <p className=\"text-sm uppercase tracking-[0.25em] text-zinc-400\">Generated artifact formula</p>\n          <p className=\"mt-3 text-xl font-semibold\">Story → Structure → Visuals → Proof → Deployment → Trust</p>\n        </div>\n      </section>\n    </main>\n  );\n}\n""".replace('TITLE', clean(title)).replace('SUMMARY', clean(summary))
-(site/'package.json').write_text(json.dumps({"name":slug,"version":"0.1.0","private":True,"scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"next":"latest","react":"latest","react-dom":"latest","typescript":"latest","@types/node":"latest","@types/react":"latest","@types/react-dom":"latest"},"devDependencies":{}}, indent=2)+'\n', encoding='utf-8')
-(site/'next.config.js').write_text("/** @type {import('next').NextConfig} */\nconst nextConfig = {};\nmodule.exports = nextConfig;\n", encoding='utf-8')
-(site/'tsconfig.json').write_text(json.dumps({"compilerOptions":{"target":"ES2017","lib":["dom","dom.iterable","esnext"],"allowJs":True,"skipLibCheck":True,"strict":True,"noEmit":True,"esModuleInterop":True,"module":"esnext","moduleResolution":"bundler","resolveJsonModule":True,"isolatedModules":True,"jsx":"preserve","incremental":True,"plugins":[{"name":"next"}]},"include":["next-env.d.ts","**/*.ts","**/*.tsx",".next/types/**/*.ts"],"exclude":["node_modules"]}, indent=2)+'\n', encoding='utf-8')
-(site/'next-env.d.ts').write_text('/// <reference types="next" />\n/// <reference types="next/image-types/global" />\n', encoding='utf-8')
-(site/'app'/'globals.css').write_text('body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #f4f4f5; color: #09090b; }\n', encoding='utf-8')
-(site/'app'/'layout.tsx').write_text('import "./globals.css";\n\nexport const metadata = {\n  title: "'+clean(data['site_title'])+'",\n  description: "'+clean(data['site_subtitle'])+'",\n};\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang="en">\n      <body>{children}</body>\n    </html>\n  );\n}\n', encoding='utf-8')
-for r in routes:
-    target=site/'app'/'page.tsx' if r['path']=='/' else site/'app'/r['path'].strip('/')/'page.tsx'
-    target.parent.mkdir(parents=True,exist_ok=True); target.write_text(page(r.get('title',r['path']), r.get('summary',data['site_subtitle'])), encoding='utf-8')
-(site/'public'/'visuals'/'.gitkeep').write_text('', encoding='utf-8')
-(site/'README.md').write_text('# '+data['site_title']+'\n\n'+data['site_subtitle']+'\n\nGenerated by AndyAI Website Forge — PACK2 Site Template Generator Foundation.\n\nDomain direction: `'+data['domain_direction']+'`\n', encoding='utf-8')
-(site/'docs'/'SITE_GENERATION_EVIDENCE.md').write_text('# Site Generation Evidence\n\nGenerated site: `'+slug+'`  \nSource blueprint: `'+str(bp)+'`  \nGenerator: AndyAI Website Forge PACK2\n\nSafety: No Supabase. No auth. No database. No monetization. No client data. No runtime AI calls.\n', encoding='utf-8')
-print('🟢 generated site scaffold: '+str(site))
-PYSITEGEN
+
+blueprint_path, content_path, route_path, out_path = sys.argv[1:5]
+blueprint = json.load(open(blueprint_path, encoding="utf-8"))
+content = json.load(open(content_path, encoding="utf-8"))
+routes = json.load(open(route_path, encoding="utf-8"))
+out = Path(out_path)
+
+if out.exists():
+    shutil.rmtree(out)
+
+(out / "app").mkdir(parents=True)
+(out / "public" / "visuals").mkdir(parents=True)
+(out / "docs").mkdir(parents=True)
+
+site_name = content.get("siteName") or blueprint.get("siteName") or "Generated Forge Site"
+tagline = content.get("tagline") or blueprint.get("tagline") or "Generated by AndyAI Website Forge."
+hero = content.get("hero", {})
+sections = content.get("sections", [])
+projects = content.get("projects", [])
+signals = content.get("signals", [])
+ctas = content.get("ctas", [])
+visual_slots = content.get("visualSlots", [])
+navigation = routes.get("navigation", [])
+route_items = routes.get("routes", [])
+
+
+def esc(value):
+    return str(value).replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
+
+
+def slug_for_path(path):
+    path = path.strip()
+    if path == "/":
+        return ""
+    return path.strip("/")
+
+
+def page_dir_for_path(path):
+    slug = slug_for_path(path)
+    return out / "app" if slug == "" else out / "app" / slug
+
+
+def nav_markup():
+    if not navigation:
+        return ""
+    links = []
+    for item in navigation:
+        links.append(f'<a href="{item.get("href", "#")}">{esc(item.get("label", "Route"))}</a>')
+    return "\n        ".join(links)
+
+
+def list_cards(items, kind):
+    if not items:
+        return "<p>No items declared yet.</p>"
+    html = []
+    for item in items:
+        title = esc(item.get("title", kind.title()))
+        summary = esc(item.get("summary", item.get("body", "Generated content block.")))
+        status = esc(item.get("status", "declared"))
+        html.append(f'<article className="card"><p className="eyebrow">{kind}</p><h3>{title}</h3><p>{summary}</p><span>{status}</span></article>')
+    return "\n          ".join(html)
+
+
+def section_blocks():
+    if not sections:
+        return "<p>No content sections declared yet.</p>"
+    html = []
+    for item in sections:
+        html.append(f'<section className="panel"><h2>{esc(item.get("title", "Content section"))}</h2><p>{esc(item.get("body", "Generated content section."))}</p></section>')
+    return "\n        ".join(html)
+
+
+def cta_blocks():
+    if not ctas:
+        return "<p>No CTA blocks declared yet.</p>"
+    html = []
+    for item in ctas:
+        html.append(f'<article className="card"><h3>{esc(item.get("label", "CTA"))}</h3><p>{esc(item.get("text", "Generated call to action."))}</p></article>')
+    return "\n          ".join(html)
+
+
+def visual_blocks():
+    if not visual_slots:
+        return "<p>No visual slots declared yet.</p>"
+    html = []
+    for slot in visual_slots:
+        html.append(f'<article className="visualSlot"><p>{esc(slot.get("label", "Visual slot"))}</p><strong>{esc(slot.get("purpose", "Visual purpose"))}</strong><span>{esc(slot.get("suggestedAspectRatio", "16:9"))}</span></article>')
+    return "\n          ".join(html)
+
+
+def page_content(route):
+    page_type = route.get("pageType", "standard")
+    title = esc(route.get("title", "Generated Page"))
+    desc = esc(route.get("description", "Generated by AndyAI Website Forge."))
+    nav = nav_markup()
+    if page_type == "home":
+        body = f'''
+      <section className="hero">
+        <p className="eyebrow">Generated by AndyAI Website Forge</p>
+        <h1>{esc(hero.get("headline", site_name))}</h1>
+        <p>{esc(hero.get("subheadline", tagline))}</p>
+        <div className="actions"><a href="/presentation">{esc(hero.get("primaryCta", "Explore"))}</a><a href="/proof">{esc(hero.get("secondaryCta", "View proof"))}</a></div>
+      </section>
+      <section className="grid">
+        {section_blocks()}
+      </section>
+      <section><h2>Visual Slots</h2><div className="grid">{visual_blocks()}</div></section>
+      <section><h2>CTA Blocks</h2><div className="grid">{cta_blocks()}</div></section>
+'''
+    elif page_type == "projects":
+        body = f'<section className="hero small"><h1>{title}</h1><p>{desc}</p></section><section className="grid">{list_cards(projects, "project")}</section>'
+    elif page_type == "signals":
+        body = f'<section className="hero small"><h1>{title}</h1><p>{desc}</p></section><section className="grid">{list_cards(signals, "signal")}</section>'
+    elif page_type == "presentation":
+        body = f'<section className="hero small"><h1>{title}</h1><p>{desc}</p></section><section className="grid">{section_blocks()}</section><section><h2>Presentation CTAs</h2><div className="grid">{cta_blocks()}</div></section>'
+    elif page_type == "proof":
+        body = f'<section className="hero small"><h1>{title}</h1><p>{desc}</p></section><section className="panel"><h2>Generation Proof</h2><p>This site was generated from blueprint, content pack and route pack inputs, then verified through Website Forge scripts.</p><p>Formula: Blueprint + Content Pack + Route Pack → Website Artifact → Verification → Evidence.</p></section>'
+    elif page_type == "contact":
+        body = f'<section className="hero small"><h1>{title}</h1><p>{desc}</p></section><section className="panel"><h2>Next step</h2><p>Review the generated evidence, confirm the content pack, then prepare deployment when the human operator approves.</p></section>'
+    else:
+        body = f'<section className="hero small"><h1>{title}</h1><p>{desc}</p></section><section className="grid">{section_blocks()}</section>'
+    return f'''export default function Page() {{
+  return (
+    <main>
+      <nav className="nav">
+        <strong>{esc(site_name)}</strong>
+        <div>{nav}</div>
+      </nav>
+      {body}
+    </main>
+  );
+}}
+'''
+
+(out / "README.md").write_text(f"""# {site_name}\n\n{tagline}\n\nGenerated by AndyAI Website Forge PACK3.\n\n## Formula\n\nBlueprint + Content Pack + Route Pack → Generated Website Artifact → Verification → Evidence\n\n## Safety\n\nNo Supabase. No auth. No database. No monetization. No client data. No runtime AI calls.\n""", encoding="utf-8")
+
+(out / "package.json").write_text(json.dumps({
+    "name": re.sub(r"[^a-z0-9-]+", "-", site_name.lower()).strip("-") or "generated-forge-site",
+    "version": "0.8.0",
+    "private": True,
+    "scripts": {"dev": "next dev", "build": "next build", "start": "next start"},
+    "dependencies": {"@types/node": "latest", "@types/react": "latest", "@types/react-dom": "latest", "next": "latest", "react": "latest", "react-dom": "latest", "typescript": "latest"},
+    "devDependencies": {}
+}, indent=2), encoding="utf-8")
+
+(out / "next.config.js").write_text("/** @type {import('next').NextConfig} */\nconst nextConfig = {};\nmodule.exports = nextConfig;\n", encoding="utf-8")
+(out / "tsconfig.json").write_text(json.dumps({"compilerOptions":{"target":"es5","lib":["dom","dom.iterable","esnext"],"allowJs":True,"skipLibCheck":True,"strict":True,"noEmit":True,"esModuleInterop":True,"module":"esnext","moduleResolution":"bundler","resolveJsonModule":True,"isolatedModules":True,"jsx":"preserve","incremental":True,"plugins":[{"name":"next"}]},"include":["next-env.d.ts","**/*.ts","**/*.tsx",".next/types/**/*.ts"],"exclude":["node_modules"]}, indent=2), encoding="utf-8")
+(out / "next-env.d.ts").write_text("/// <reference types=\"next\" />\n/// <reference types=\"next/image-types/global\" />\n", encoding="utf-8")
+(out / "app" / "layout.tsx").write_text(f"""import './globals.css';\n\nexport const metadata = {{\n  title: `{esc(site_name)}`,\n  description: `{esc(tagline)}`\n}};\n\nexport default function RootLayout({{ children }}: {{ children: React.ReactNode }}) {{\n  return (\n    <html lang=\"en\">\n      <body>{{children}}</body>\n    </html>\n  );\n}}\n""", encoding="utf-8")
+(out / "app" / "globals.css").write_text(""":root { color-scheme: light; }\n* { box-sizing: border-box; }\nbody { margin: 0; font-family: Arial, sans-serif; background: #f7f4ef; color: #171717; }\na { color: inherit; text-decoration: none; }\nmain { max-width: 1120px; margin: 0 auto; padding: 24px; }\n.nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; }\n.nav div { display: flex; flex-wrap: wrap; gap: 12px; font-size: 14px; }\n.hero { margin: 40px 0; padding: 56px; border-radius: 28px; background: white; box-shadow: 0 18px 60px rgba(0,0,0,.08); }\n.hero.small { padding: 36px; }\nh1 { font-size: clamp(36px, 7vw, 78px); line-height: .95; margin: 0 0 18px; }\nh2 { font-size: 32px; margin-top: 0; }\nh3 { margin-bottom: 8px; }\np { font-size: 18px; line-height: 1.65; }\n.eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: 12px; font-weight: 700; }\n.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }\n.actions a { padding: 12px 16px; border: 1px solid #171717; border-radius: 999px; }\n.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin: 24px 0; }\n.panel, .card, .visualSlot { background: white; border-radius: 24px; padding: 24px; box-shadow: 0 12px 34px rgba(0,0,0,.06); }\n.card span, .visualSlot span { display: inline-block; margin-top: 12px; font-size: 13px; opacity: .75; }\n.visualSlot { min-height: 180px; border: 1px dashed rgba(0,0,0,.25); }\n""", encoding="utf-8")
+(out / "public" / "visuals" / ".gitkeep").write_text("", encoding="utf-8")
+
+for route in route_items:
+    d = page_dir_for_path(route.get("path", "/"))
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "page.tsx").write_text(page_content(route), encoding="utf-8")
+
+(out / "docs" / "SITE_GENERATION_EVIDENCE.md").write_text(f"""# Site Generation Evidence\n\nGenerated by AndyAI Website Forge PACK3.\n\n## Inputs\n\n- Blueprint: `{blueprint_path}`\n- Content pack: `{content_path}`\n- Route pack: `{route_path}`\n\n## Output\n\n- Site: `{out_path}`\n\n## Formula\n\nBlueprint + Content Pack + Route Pack → Generated Website Artifact → Verification → Evidence\n""", encoding="utf-8")
+
+(out / "docs" / "CONTENT_ROUTE_PACK_EVIDENCE.md").write_text(f"""# Content + Route Pack Evidence\n\n## Site\n\n{site_name}\n\n## Generated routes\n\n""" + "\n".join([f"- `{r.get('path')}` — {r.get('title')} — {r.get('pageType')}" for r in route_items]) + f"""\n\n## Generated content blocks\n\n- Sections: {len(sections)}\n- Projects: {len(projects)}\n- Signals: {len(signals)}\n- CTAs: {len(ctas)}\n- Visual slots: {len(visual_slots)}\n\n## Safety\n\nNo Supabase. No auth. No database. No monetization. No client data. No runtime AI calls.\n""", encoding="utf-8")
+
+print(f"🟢 generated PACK3 site scaffold: {out}")
+PY

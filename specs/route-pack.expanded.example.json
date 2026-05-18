@@ -1,0 +1,56 @@
+{
+  "routePackVersion": "0.3",
+  "navigation": [
+    { "label": "Home", "href": "/" },
+    { "label": "About", "href": "/about" },
+    { "label": "Projects", "href": "/projects" },
+    { "label": "Signals", "href": "/signals" },
+    { "label": "Presentation", "href": "/presentation" },
+    { "label": "Proof", "href": "/proof" },
+    { "label": "Contact", "href": "/contact" }
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "title": "Home",
+      "description": "Main generated homepage",
+      "pageType": "home"
+    },
+    {
+      "path": "/about",
+      "title": "About",
+      "description": "Generated explanation of the site identity and method",
+      "pageType": "standard"
+    },
+    {
+      "path": "/projects",
+      "title": "Projects",
+      "description": "Generated project cards from content pack",
+      "pageType": "projects"
+    },
+    {
+      "path": "/signals",
+      "title": "Signals",
+      "description": "Generated signal cards from content pack",
+      "pageType": "signals"
+    },
+    {
+      "path": "/presentation",
+      "title": "Presentation",
+      "description": "Generated presentation flow",
+      "pageType": "presentation"
+    },
+    {
+      "path": "/proof",
+      "title": "Proof",
+      "description": "Generated proof and evidence overview",
+      "pageType": "proof"
+    },
+    {
+      "path": "/contact",
+      "title": "Contact",
+      "description": "Generated contact and next-step page",
+      "pageType": "contact"
+    }
+  ]
+}
